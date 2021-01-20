@@ -1,0 +1,41 @@
+version: "3.7"
+services:
+  db:
+    build: be/db
+    container_name: eshop_db
+    image: "eshop_db"
+    expose:
+      - 5432
+  be:
+    build: be
+    image: "eshop_be"
+    container_name: eshop_be
+    volumes:
+      - './be:/app'
+      - '/app/node_modules'
+    ports:
+      - "8000:8000"
+    depends_on:
+      - "db"
+    environment:
+      - DB_HOST=db
+      - WAIT_HOSTS=db:5432
+      - WAIT_HOSTS_TIMEOUT=300
+      - WAIT_SLEEP_INTERVAL=5
+      - WAIT_HOST_CONNECT_TIMEOUT=30
+    command: sh -c "/wait && node db/seed.js && npm run start-dev"
+  fe:
+    build: fe
+    image: "eshop_fe"
+    container_name: eshop_fe
+    volumes: 
+      - './fe:/app'
+      - '/app/node_modules'
+    ports:
+      - "8000:8000"
+    depends_on:
+      - "be"
+    environment:
+      - SERVER_URL=http://be:8000
+    ports:
+      - "8080:8080"

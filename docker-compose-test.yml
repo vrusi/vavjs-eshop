@@ -1,0 +1,26 @@
+version: "3.7"
+services:
+  db-test:
+    build: be/db
+    container_name: eshop_db_test
+    image: "eshop_db_test"
+    expose:
+      - 5432
+  be-test:
+    build: be
+    image: "eshop_be_test"
+    container_name: eshop_be_test
+    volumes:
+      - "./be:/app"
+      - "/app/node_modules"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - "db-test"
+    environment:
+      - DB_HOST=db-test
+      - WAIT_HOSTS=db-test:5432
+      - WAIT_HOSTS_TIMEOUT=300
+      - WAIT_SLEEP_INTERVAL=5
+      - WAIT_HOST_CONNECT_TIMEOUT=30
+    command: sh -c "/wait && npm run test"
